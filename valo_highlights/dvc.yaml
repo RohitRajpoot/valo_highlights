@@ -1,0 +1,37 @@
+stages:
+  # Stage A: Extract frames (you already have this)
+  extract_frames:
+    cmd: .venv/bin/python scripts/extract_frames.py
+    deps:
+      - raw_videos
+      - scripts/extract_frames.py
+    outs:
+      - frames
+
+  # Stage B: Extract audio (you already have this)
+  extract_audio:
+    cmd: .venv/bin/python scripts/extract_audio.py
+    deps:
+      - raw_videos
+      - scripts/extract_audio.py
+    outs:
+      - audio
+
+  # Stage C: Run OCR (you already have this)
+  run_ocr:
+    cmd: .venv/bin/python scripts/run_ocr.py
+    deps:
+      - frames
+      - scripts/run_ocr.py
+    outs:
+      - ocr
+
+  # Stage D: Preprocess OCR into CSV (new)
+  preprocess_ocr:
+    cmd: .venv/bin/python scripts/preprocess_ocr.py
+    deps:
+      - ocr
+      - annotations/highlights.csv
+      - scripts/preprocess_ocr.py
+    outs:
+      - annotations/with_ocr.csv

@@ -1,0 +1,12 @@
+.idea
+.venv
+valo_highlights/raw_videos/# macOS metadata
+valo_highlights/frames/
+valo_highlights/audio/
+valo_highlights/ocr/
+valo_highlights/dvc_storage/
+.venv/
+*.DS_Store
+
+# DVC-tracked video data
+valo_highlights/raw_videos/
