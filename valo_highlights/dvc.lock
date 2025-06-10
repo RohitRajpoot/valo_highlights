@@ -1,0 +1,77 @@
+schema: '2.0'
+stages:
+  extract_frames:
+    cmd: .venv/bin/python scripts/extract_frames.py
+    deps:
+    - path: raw_videos
+      hash: md5
+      md5: 18f0513d92af319b7398ca1586276ea9.dir
+      size: 4894197495
+      nfiles: 7
+    - path: scripts/extract_frames.py
+      hash: md5
+      md5: cfd933424a4198a629bdbc21fd6e871d
+      size: 1645
+    outs:
+    - path: frames
+      hash: md5
+      md5: bb5aa5ae39d1010e29c8e9c0d34b98ca.dir
+      size: 2430385295
+      nfiles: 5031
+  extract_audio:
+    cmd: .venv/bin/python scripts/extract_audio.py
+    deps:
+    - path: raw_videos
+      hash: md5
+      md5: 18f0513d92af319b7398ca1586276ea9.dir
+      size: 4894197495
+      nfiles: 7
+    - path: scripts/extract_audio.py
+      hash: md5
+      md5: 1568d8dec5ed0f914e08a3877ba343e8
+      size: 1020
+    outs:
+    - path: audio
+      hash: md5
+      md5: 9e126816ed69d5b01cbce881c69a334d.dir
+      size: 318554630
+      nfiles: 5
+  run_ocr:
+    cmd: .venv/bin/python scripts/run_ocr.py
+    deps:
+    - path: frames
+      hash: md5
+      md5: bb5aa5ae39d1010e29c8e9c0d34b98ca.dir
+      size: 2430385295
+      nfiles: 5031
+    - path: scripts/run_ocr.py
+      hash: md5
+      md5: 5d6077b600798bd1931fc2d648cba66e
+      size: 1314
+    outs:
+    - path: ocr
+      hash: md5
+      md5: c469e64a5bb3b67e4bb77808214420ee.dir
+      size: 832407
+      nfiles: 5
+  preprocess_ocr:
+    cmd: .venv/bin/python scripts/preprocess_ocr.py
+    deps:
+    - path: annotations/highlights.csv
+      hash: md5
+      md5: 39714a97522c254641ca77584e1ec8b9
+      size: 5585
+    - path: ocr
+      hash: md5
+      md5: c469e64a5bb3b67e4bb77808214420ee.dir
+      size: 832407
+      nfiles: 5
+    - path: scripts/preprocess_ocr.py
+      hash: md5
+      md5: fbb11a044aa2f76db3452475e057fbf8
+      size: 1386
+    outs:
+    - path: annotations/with_ocr.csv
+      hash: md5
+      md5: 47fafdc1b8341c55f58823905b047506
+      size: 5592
