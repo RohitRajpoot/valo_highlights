@@ -1,0 +1,6 @@
+outs:
+- md5: a90c369f7c7f0d4288fe44c72c585c51.dir
+  size: 10304128
+  nfiles: 5
+  hash: md5
+  path: frame_feats
