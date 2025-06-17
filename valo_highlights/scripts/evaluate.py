@@ -11,10 +11,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 MAX_TFIDF_FEATURES = 100
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
-MODEL_PATH   = os.path.join(PROJECT_ROOT, "models", "highlight_model.pt")
+MODEL_PATH   = os.path.join(PROJECT_ROOT, "models", "highlight_model_with_text.pt")
 ANNO_CSV     = os.path.join(PROJECT_ROOT, "annotations", "with_ocr.csv")
 
-sample_frame, sample_audio, sample_text, _ = dataset[0]
 def evaluate():
     # 1) Read the annotations CSV
     df = pd.read_csv(ANNO_CSV)
@@ -30,13 +29,14 @@ def evaluate():
 
     # 3) Now construct the dataset with both CSV and TF–IDF text features
     dataset = HighlightDataset(ANNO_CSV, text_vectors)
-    loader  = DataLoader(dataset, batch_size=8, shuffle=False, collate_fn=collate_fn)
+    loader = DataLoader(dataset, batch_size=8, shuffle=False, collate_fn=collate_fn)
 
     # 2) Load model
-    sample_frame, sample_audio, _ = dataset[0]
+    sample_frame, sample_audio, sample_text, _ = dataset[0]
     model = HighlightModel(
         frame_dim=sample_frame.shape[1],
         audio_dim=sample_audio.shape[0],
+        text_dim=sample_text.shape[0],
         hidden_size=128,
         num_layers=1,
         num_classes=len(dataset.labels)
@@ -47,7 +47,7 @@ def evaluate():
     # 3) Predict
     all_preds, all_labels = [], []
     with torch.no_grad():
-        for frames, audios, texts, labels in loader:
+        for frames, audios, texts_batch, labels in loader:
             logits = model(frames, audios, texts)
             preds = logits.argmax(dim=1).cpu().numpy()
             all_preds.extend(preds.tolist())
