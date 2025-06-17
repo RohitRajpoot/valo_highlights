@@ -1,0 +1,5 @@
+outs:
+- md5: ba918dffac98117f71c97abab413468b
+  size: 1450549
+  hash: md5
+  path: highlight_model.pt
