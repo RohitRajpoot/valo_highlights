@@ -89,26 +89,44 @@ def collate_fn(batch):
 
 
 class HighlightModel(nn.Module):
-    def __init__(self, frame_dim, audio_dim, text_dim, hidden_size, num_layers, num_classes):
+    def __init__(
+        self,
+        frame_dim: int,
+        audio_dim: int,
+        text_dim: int,
+        hidden_size: int,
+        num_layers: int,
+        num_classes: int
+    ):
         super().__init__()
-        self.lstm = nn.LSTM(input_size=frame_dim + audio_dim,
-                            hidden_size=hidden_size,
-                            num_layers=num_layers,
-                            batch_first=True)
+        # LSTM input is ONLY frame_dim + audio_dim
+        self.lstm = nn.LSTM(
+            input_size=frame_dim + audio_dim,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            batch_first=True,
+        )
+        # After LSTM, concatenate its final hidden state with the text vector
         self.fc = nn.Linear(hidden_size + text_dim, num_classes)
 
-    def forward(self, frames, audios, texts):
-        # Sequence fusion
-        audio_avg = audios.mean(dim=2)  # (B, n_mels)
-        B, T, _ = frames.shape
-        audio_rep = audio_avg.unsqueeze(1).repeat(1, T, 1)
-        x = torch.cat([frames, audio_rep], dim=2)
-        out, (h_n, _) = self.lstm(x)
-        last = h_n[-1]  # (B, hidden_size)
-        # Concatenate text features
-        combined = torch.cat([last, texts], dim=1)
-        logits = self.fc(combined)
-        return logits
+    def forward(self, frames: torch.Tensor, audios: torch.Tensor, texts: torch.Tensor) -> torch.Tensor:
+        """
+        frames: [B, T, frame_dim]
+        audios: [B, T, audio_dim]
+        texts:  [B, text_dim]
+        """
+        # 1) Concatenate frame & audio along the feature dimension
+        x = torch.cat([frames, audios], dim=2)        # [B, T, frame_dim+audio_dim]
+
+        # 2) Run the LSTM
+        out, (h_n, _) = self.lstm(x)                  # h_n[-1] is [B, hidden_size]
+        last = h_n[-1]
+
+        # 3) Fuse in the text vector
+        combined = torch.cat([last, texts], dim=1)    # [B, hidden_size+text_dim]
+
+        # 4) Classify
+        return self.fc(combined)
 
 
 def train():
