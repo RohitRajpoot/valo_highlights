@@ -8,3 +8,6 @@ audio/
 ocr/
 dvc_storage/
 mlruns/
+reports/
+__pycache__/
+*.pyc
