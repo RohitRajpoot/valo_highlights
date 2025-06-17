@@ -1,0 +1,6 @@
+outs:
+- md5: 73fbccce0b1fbf54d1d272a50d00117f.dir
+  size: 39820672
+  nfiles: 5
+  hash: md5
+  path: audio_feats
