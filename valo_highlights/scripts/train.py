@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 import glob
 import mlflow
+from sklearn.utils.class_weight import compute_class_weight
 
 # Compute project root
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
@@ -25,6 +26,13 @@ NUM_LSTM_LAYERS = 1
 
 class HighlightDataset(Dataset):
     def __init__(self, annotations_csv):
+        labels_array = dataset.df['label'].values
+        classes = np.array(dataset.labels)
+        weights_np = compute_class_weight("balanced", classes=classes, y=labels_array)
+        class_weights = torch.tensor(weights_np, dtype=torch.float).to(device)
+
+        criterion = nn.CrossEntropyLoss(weight=class_weights)
+
         self.df = pd.read_csv(annotations_csv)
         self.labels = sorted(self.df['label'].unique())
         self.label2idx = {lab: i for i, lab in enumerate(self.labels)}
@@ -106,7 +114,7 @@ def train():
                            hidden_size=HIDDEN_SIZE,
                            num_layers=NUM_LSTM_LAYERS,
                            num_classes=len(dataset.labels)).to(device)
-    criterion = nn.CrossEntropyLoss()
+    
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
     mlflow.start_run()
