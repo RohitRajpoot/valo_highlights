@@ -52,19 +52,43 @@ class HighlightDataset(Dataset):
 
 # Collate with padding for frames and audios, stack text vectors
 def collate_fn(batch):
-    frames, audios, texts, labels = zip(*batch)
-    # Pad frames
-    max_frame_len = max(f.shape[0] for f in frames)
-    padded_frames = [F.pad(f, (0,0,0, max_frame_len - f.shape[0])) for f in frames]
-    frames_tensor = torch.stack(padded_frames)
-    # Pad audios
-    max_audio_len = max(a.shape[1] for a in audios)
-    padded_audios = [F.pad(a, (0, max_audio_len - a.shape[1], 0,0)) for a in audios]
-    audios_tensor = torch.stack(padded_audios)
-    # Text features
-    texts_tensor = torch.stack([t for t in texts])
-    labels_tensor = torch.tensor(labels)
+    # batch is a list of tuples: (frame_feats [T_i×F], audio_feats [L_i×A], text_vec [100], label)
+    frames_list, audios_list, texts_list, labels_list = zip(*batch)
+
+    # 1) Pad & stack frame features
+    #    Find max #frames in this batch
+    frame_lengths = [f.shape[0] for f in frames_list]
+    max_frames    = max(frame_lengths)
+    #    Pad each to [max_frames × feat_dim]
+    padded_frames = []
+    for f in frames_list:
+        tensor_f = torch.tensor(f, dtype=torch.float32)      # [T_i, feat_dim]
+        pad_amt  = max_frames - tensor_f.size(0)
+        # pad (left,right, top,bottom) → here only pad rows (bottom)
+        padded = F.pad(tensor_f, (0,0, 0, pad_amt))           # [max_frames, feat_dim]
+        padded_frames.append(padded)
+    frames_tensor = torch.stack(padded_frames, dim=0)         # [B, max_frames, feat_dim]
+
+    # 2) Pad & stack audio features
+    audio_lengths = [a.shape[0] for a in audios_list]
+    max_audio     = max(audio_lengths)
+    padded_audios = []
+    for a in audios_list:
+        tensor_a = torch.tensor(a, dtype=torch.float32)      # [L_i, audio_dim]
+        pad_amt  = max_audio - tensor_a.size(0)
+        padded   = F.pad(tensor_a, (0,0, 0, pad_amt))        # [max_audio, audio_dim]
+        padded_audios.append(padded)
+    audios_tensor = torch.stack(padded_audios, dim=0)        # [B, max_audio, audio_dim]
+
+    # 3) Stack text vectors
+    text_tensors = [torch.tensor(t, dtype=torch.float32) for t in texts_list]
+    texts_tensor = torch.stack(text_tensors, dim=0)          # [B, MAX_TFIDF_FEATURES]
+
+    # 4) Labels
+    labels_tensor = torch.tensor(labels_list, dtype=torch.long)  # [B]
+
     return frames_tensor, audios_tensor, texts_tensor, labels_tensor
+
 
 class HighlightModel(nn.Module):
     def __init__(self, frame_dim, audio_dim, text_dim, hidden_size, num_layers, num_classes):
