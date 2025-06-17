@@ -52,46 +52,40 @@ class HighlightDataset(Dataset):
 
 # Collate with padding for frames and audios, stack text vectors
 def collate_fn(batch):
-    # batch is a list of tuples: (frame_feats [T_i×F], audio_feats [L_i×A], text_vec [100], label)
+    # batch: list of (frame_feats [T_i×F], audio_feats [n_mels×T_i], text_vec [D_text], label)
     frames_list, audios_list, texts_list, labels_list = zip(*batch)
 
-    # 1) Pad & stack frame features
-    #    Find max #frames in this batch
-    frame_lengths = [f.shape[0] for f in frames_list]
-    max_frames    = max(frame_lengths)
-    #    Pad each to [max_frames × feat_dim]
+    # 1) Frame padding & stacking
+    frame_lens   = [f.shape[0] for f in frames_list]
+    max_frames   = max(frame_lens)
     padded_frames = []
     for f in frames_list:
-        tensor_f = torch.tensor(f, dtype=torch.float32)      # [T_i, feat_dim]
-        pad_amt  = max_frames - tensor_f.size(0)
-        # pad (left,right, top,bottom) → here only pad rows (bottom)
-        padded = F.pad(tensor_f, (0,0, 0, pad_amt))           # [max_frames, feat_dim]
-        padded_frames.append(padded)
-    frames_tensor = torch.stack(padded_frames, dim=0)         # [B, max_frames, feat_dim]
+        t = torch.as_tensor(f, dtype=torch.float32)  # [T_i, F]
+        pad = max_frames - t.size(0)
+        t_padded = F.pad(t, (0,0, 0,pad))             # pad rows to [max_frames, F]
+        padded_frames.append(t_padded)
+    frames_tensor = torch.stack(padded_frames, dim=0)  # [B, max_frames, F]
 
-    # 2) Pad & stack audio features correctly
-    #    audios_list[i] is a NumPy array of shape [n_mels, time_i]
-    #    We want shape [time_i, n_mels] for the LSTM.
-    #    First, get each clip’s time length:
-    time_lengths = [a.shape[1] for a in audios_list]
-    max_time = max(time_lengths)
-
+    # 2) Audio padding & stacking (transpose so time is first axis)
+    time_lens  = [a.shape[1] for a in audios_list]
+    max_time   = max(time_lens)
     padded_audios = []
     for a in audios_list:
-        # Transpose → [time_i, n_mels]
-        tensor_a = torch.tensor(a.T, dtype=torch.float32)
-        # How many time‐steps to pad?
-        pad_amt = max_time - tensor_a.size(0)
-        # pad=(left, right, top, bottom) in (cols, rows)
-        padded = F.pad(tensor_a, (0, 0, 0, pad_amt))
-        padded_audios.append(padded)
+        t = torch.as_tensor(a.T, dtype=torch.float32)  # [T_i, n_mels]
+        pad = max_time - t.size(0)
+        t_padded = F.pad(t, (0,0, 0,pad))              # [max_time, n_mels]
+        padded_audios.append(t_padded)
+    audios_tensor = torch.stack(padded_audios, dim=0)  # [B, max_time, n_mels]
 
-    # Now every tensor is [max_time, n_mels]; stack into [B, max_time, n_mels]
-    audios_tensor = torch.stack(padded_audios, dim=0)
+    # 3) Text stacking
+    text_tensors = [torch.as_tensor(x, dtype=torch.float32) for x in texts_list]
+    texts_tensor = torch.stack(text_tensors, dim=0)      # [B, D_text]
 
-    # … text stacking + labels (unchanged) …
+    # 4) Labels
+    labels_tensor = torch.as_tensor(labels_list, dtype=torch.long)
 
     return frames_tensor, audios_tensor, texts_tensor, labels_tensor
+
 
 
 class HighlightModel(nn.Module):
