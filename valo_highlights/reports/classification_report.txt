@@ -1,9 +1,9 @@
               precision    recall  f1-score   support
 
-         ACE       0.45      1.00      0.62        63
-      Clutch       0.24      0.09      0.13        45
+         ACE       0.47      0.86      0.61        63
+      Clutch       0.45      0.44      0.45        45
      Multi_K       0.00      0.00      0.00        50
 
-    accuracy                           0.42       158
-   macro avg       0.23      0.36      0.25       158
-weighted avg       0.25      0.42      0.28       158
+    accuracy                           0.47       158
+   macro avg       0.31      0.43      0.35       158
+weighted avg       0.32      0.47      0.37       158
