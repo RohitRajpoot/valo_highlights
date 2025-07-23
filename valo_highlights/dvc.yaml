@@ -1,14 +1,5 @@
 stages:
-  # Stage A: Extract frames
-  extract_frames:
-    cmd: .venv/bin/python scripts/extract_frames.py
-    deps:
-      - raw_videos
-      - scripts/extract_frames.py
-    outs:
-      - frames
-
-# NEW Stage B: cut out your labeled mini‐clips
+  # Stage A: cut out your labeled mini-clips
   extract_segments:
     cmd: bash scripts/extract_segments.sh
     deps:
@@ -18,38 +9,39 @@ stages:
     outs:
       - raw_videos/segments
 
-    extract_frames:
-      cmd: .venv/bin/python scripts/extract_frames.py
-      deps:
-        - raw_videos/segments
-        - scripts/extract_frames.py
-      outs:
-        - frames
+  # Stage B: extract frames from those mini-clips
+  extract_frames:
+    cmd: .venv/bin/python scripts/extract_frames.py
+    deps:
+      - raw_videos/segments
+      - scripts/extract_frames.py
+    outs:
+      - frames
 
-    # Stage D: extract audio
-    extract_audio:
-      cmd: .venv/bin/python scripts/extract_audio.py
-      deps:
-        - raw_videos/segments
-        - scripts/extract_audio.py
-      outs:
-        - audio
+  # Stage C: extract audio
+  extract_audio:
+    cmd: .venv/bin/python scripts/extract_audio.py
+    deps:
+      - raw_videos/segments
+      - scripts/extract_audio.py
+    outs:
+      - audio
 
-    # Stage E: run OCR
-    run_ocr:
-      cmd: .venv/bin/python scripts/run_ocr.py
-      deps:
-        - frames
-        - scripts/run_ocr.py
-      outs:
-        - ocr
+  # Stage D: run OCR on frames
+  run_ocr:
+    cmd: .venv/bin/python scripts/run_ocr.py
+    deps:
+      - frames
+      - scripts/run_ocr.py
+    outs:
+      - ocr
 
-    # Stage F: preprocess OCR → CSV
-    preprocess_ocr:
-      cmd: .venv/bin/python scripts/preprocess_ocr.py
-      deps:
-        - ocr
-        - annotations/Highlights.csv
-        - scripts/preprocess_ocr.py
-      outs:
-        - annotations/with_ocr.csv
+  # Stage E: merge OCR into your annotations CSV
+  preprocess_ocr:
+    cmd: .venv/bin/python scripts/preprocess_ocr.py
+    deps:
+      - ocr
+      - annotations/Highlights.csv
+      - scripts/preprocess_ocr.py
+    outs:
+      - annotations/with_ocr.csv
