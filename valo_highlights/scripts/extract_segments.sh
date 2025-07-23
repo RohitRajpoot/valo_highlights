@@ -1,11 +1,24 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+# ensure top‐level segments/ exists
 mkdir -p segments
-tail -n +2 annotations/Highlights.csv | \
-while IFS=, read -r video start end label; do
+
+# skip header, loop over CSV
+tail -n +2 annotations/Highlights.csv | while IFS=, read -r video start end label; do
+  in="raw_videos/$video"
   out="segments/${video%.*}_${start//:/-}.webm"
-  [ -f "$out" ] && continue
+
+  # skip if already done
+  if [[ -f "$out" ]]; then
+    echo "Skipping existing $out"
+    continue
+  fi
+
   ffmpeg -hide_banner -loglevel error \
-    -i "raw_videos/$video" \
+    -i "$in" \
     -ss "$start" -to "$end" \
-    -c copy "$out"
+    -c:v libvpx-vp9 -b:v 1M \
+    -c:a libopus \
+    "$out"
 done

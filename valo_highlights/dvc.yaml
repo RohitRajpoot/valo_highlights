@@ -1,33 +1,26 @@
 stages:
-  # Stage A: cut out your labeled mini-clips
   extract_segments:
     cmd: bash scripts/extract_segments.sh
     deps:
-      - raw_videos         # your full-length clips
+      - raw_videos
       - annotations/Highlights.csv
       - scripts/extract_segments.sh
     outs:
-      - segments           # top-level segments/
-
-  # Stage B: extract frames from those mini-clips
+      - segments     # ← top-level
   extract_frames:
     cmd: .venv/bin/python scripts/extract_frames.py
     deps:
-      - segments           # <-- changed from raw_videos/segments
+      - segments
       - scripts/extract_frames.py
     outs:
       - frames
-
-  # Stage C: extract audio from the mini-clips
   extract_audio:
     cmd: .venv/bin/python scripts/extract_audio.py
     deps:
-      - segments           # <-- changed here as well
+      - segments
       - scripts/extract_audio.py
     outs:
       - audio
-
-  # Stage D: run OCR on the extracted frames
   run_ocr:
     cmd: .venv/bin/python scripts/run_ocr.py
     deps:
@@ -35,8 +28,6 @@ stages:
       - scripts/run_ocr.py
     outs:
       - ocr
-
-  # Stage E: merge OCR results back into your CSV
   preprocess_ocr:
     cmd: .venv/bin/python scripts/preprocess_ocr.py
     deps:
