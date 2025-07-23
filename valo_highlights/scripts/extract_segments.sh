@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-mkdir -p raw_videos/segments
+mkdir -p segments
 tail -n +2 annotations/Highlights.csv | \
 while IFS=, read -r video start end label; do
   out="segments/${video%.*}_${start//:/-}.webm"
