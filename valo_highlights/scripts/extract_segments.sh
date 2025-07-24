@@ -3,17 +3,20 @@ set -euo pipefail
 
 mkdir -p segments
 
-tail -n +2 annotations/Highlights.csv | while IFS=, read -r video start end label; do
-  out="segments/${video%.*}_${start//:/-}.webm"
+# segments.tsv has lines: <path>\t<start>\t<end>
+while IFS=$'\t' read -r path start end; do
+  name=$(basename "$path" .mp4)
+  out="segments/${name}_${start//:/-}-${end//:/-}.webm"
   if [[ -f "$out" ]]; then
-    echo "⏭  Skipping existing $out"
+    echo "Skipping $out"
     continue
   fi
 
-  ffmpeg -nostdin -hide_banner -loglevel error \
-         -i "raw_videos/$video" \
-         -ss "$start" -to "$end" \
-         -c:v libvpx-vp9 -crf 30 -b:v 0 \
-         -c:a libopus \
-         "$out"
-done
+  # (we’ll override this ffmpeg call below)
+  ffmpeg -hide_banner -loglevel error \
+    -i "$path" -ss "$start" -to "$end" \
+    -c:v libvpx-vp9 -cpu-used 4 -threads 4 \
+    -c:a libopus -b:a 64k \
+    "$out"
+
+done < segments.tsv
