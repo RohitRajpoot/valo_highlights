@@ -11,3 +11,27 @@ mlruns/
 reports/
 __pycache__/
 *.pyc
+
+# —— generated media & features ——
+segments_fast/
+segments_fixed/
+frames/
+audio/
+features/
+*.webm
+*.wav
+*.jpg
+*.parquet
+highlight_classifier.pth
+label_encoder.pkl
+final_highlights.webm
+
+# —— concat + helper txt files ——
+concat_list.txt
+concat_clean.txt
+bad_segments.txt
+existing.txt
+all_clips.txt
+good_segments.txt
+segment_list.txt
+shuffled.txt
