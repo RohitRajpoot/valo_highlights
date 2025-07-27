@@ -25,6 +25,7 @@ features/
 highlight_classifier.pth
 label_encoder.pkl
 final_highlights.webm
+segments/
 
 # —— concat + helper txt files ——
 concat_list.txt
