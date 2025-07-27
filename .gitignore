@@ -10,3 +10,4 @@ valo_highlights/dvc_storage/
 
 # DVC-tracked video data
 valo_highlights/raw_videos/
+bad_segments.txt
