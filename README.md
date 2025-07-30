@@ -5,8 +5,8 @@ Automatically detect and extract highlight moments (e.g., ACEs, clutches, spike 
 
 ## Output
 - Highlight video clips (.mp4)
-- Summary text (.json)
-- Web interface (Streamlit/FastAPI)
+- Summary text
+- Web interface (Streamlit)
 
 ## Domains
 - Computer Vision
